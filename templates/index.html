@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Job Failure Escalation</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand-mark">JF</div>
+      <div>
+        <p class="eyebrow">OPERATIONS • INCIDENT COMMUNICATION</p>
+        <h1>Job Failure Escalation</h1>
+        <p class="subtitle">Prepare an Outlook escalation draft in a few steps.</p>
+      </div>
+      <span class="status"><span class="status-dot"></span> Local tool</span>
+    </header>
+
+    {% if error %}
+      <div class="alert" role="alert">{{ error }}</div>
+    {% endif %}
+
+    <form class="form-card" method="post">
+      <div class="section-title">
+        <span class="step">01</span>
+        <div>
+          <h2>Recipient</h2>
+          <p>Choose a recently used address or enter a new one.</p>
+        </div>
+      </div>
+
+      {% if history %}
+        <label for="email_choice">Previous on-call addresses</label>
+        <select id="email_choice" name="email_choice" onchange="toggleNewEmail()">
+          {% for email in history %}
+            <option value="{{ loop.index0 }}">{{ email }}</option>
+          {% endfor %}
+          <option value="__new__">＋ Enter a new email address</option>
+        </select>
+        <div id="new-email-wrap" class="hidden">
+          <label for="on_call_email">New on-call email address</label>
+          <input id="on_call_email" name="on_call_email" type="email" placeholder="name@company.co.za">
+        </div>
+      {% else %}
+        <label for="on_call_email">On-call person's email address</label>
+        <input id="on_call_email" name="on_call_email" type="email" required placeholder="name@company.co.za">
+      {% endif %}
+
+      <div class="divider"></div>
+
+      <div class="section-title">
+        <span class="step">02</span>
+        <div>
+          <h2>Failure details</h2>
+          <p>Enter the job and where it failed.</p>
+        </div>
+      </div>
+      <label for="job_name">Failed job</label>
+      <input id="job_name" name="job_name" required placeholder="Example:">
+
+      <div class="field-grid">
+        <div>
+          <label for="scheme_name">Scheme</label>
+          <input id="scheme_name" name="scheme_name" required placeholder="Scheme name">
+        </div>
+        <div>
+          <label for="sheet_name">Sheet</label>
+          <input id="sheet_name" name="sheet_name" required placeholder="Sheet name">
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="section-title">
+        <span class="step">03</span>
+        <div>
+          <h2>Shift</h2>
+          <p>CC recipients are set automatically based on the selected shift.</p>
+        </div>
+      </div>
+
+      <div class="shift-options">
+        <label class="shift-option">
+          <input type="radio" name="shift" value="1" required>
+          <span class="radio-art"></span>
+          <span class="shift-copy">
+            <strong>Day Shift</strong>
+            <small>Operators group + CSS Production</small>
+          </span>
+          <span class="shift-time">☀</span>
+        </label>
+        <label class="shift-option">
+          <input type="radio" name="shift" value="2" required>
+          <span class="radio-art"></span>
+          <span class="shift-copy">
+            <strong>Night Shift</strong>
+            <small>Operators group</small>
+          </span>
+          <span class="shift-time">☾</span>
+        </label>
+      </div>
+
+      <button class="button primary submit" type="submit">
+        Open Outlook escalation <span>↗</span>
+      </button>
+      <p class="privacy-note">
+        <span>ⓘ</span> This page runs locally on your computer. Outlook will open automatically.
+      </p>
+    </form>
+
+    <div class="session-controls">
+      <form action="{{ url_for('shutdown') }}" method="post" onsubmit="return confirm('End the Job Failure Escalator session?');">
+        <button type="submit" class="end-session">End session</button>
+      </form>
+    </div>
+
+    <footer>Job Failure Escalator <span>•</span> INTERNAL OPERATIONS UTILITY</footer>
+  </main>
+
+  {% if result and result.mailto_url %}
+    <script>
+      window.addEventListener("load", function () {
+        window.location.href = {{ result.mailto_url | tojson }};
+      });
+    </script>
+  {% endif %}
+
+  <script>
+    function toggleNewEmail() {
+      const select = document.getElementById('email_choice');
+      const wrap = document.getElementById('new-email-wrap');
+      const input = document.getElementById('on_call_email');
+      if (!select || !wrap || !input) return;
+      const isNew = select.value === '__new__';
+      wrap.classList.toggle('hidden', !isNew);
+      input.required = isNew;
+      if (!isNew) input.value = '';
+    }
+  </script>
+</body>
+</html>
